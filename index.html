@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Volt Labs — Command Center</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --yellow: #EAFF00;
+            --yellow-dim: rgba(234, 255, 0, 0.5);
+            --yellow-ghost: rgba(234, 255, 0, 0.08);
+            --bg: #09090b;
+            --zinc-900: #18181b;
+            --zinc-800: #27272a;
+            --zinc-700: #3f3f46;
+            --zinc-600: #52525b;
+            --zinc-500: #71717a;
+            --zinc-400: #a1a1aa;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border-strong: rgba(255, 255, 255, 0.2);
+            --success: #00D68F;
+            --warning: #FFB800;
+            --danger: #FF4757;
+            --purple: #A78BFA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Dot matrix */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 22px 22px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Radial glow */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(500px at 50% 0%, rgba(234,255,0,0.04), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--zinc-800); }
+
+        /* ── GLASS ── */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--zinc-900);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--yellow-dim);
+            box-shadow: 0 0 12px rgba(234,255,0,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--yellow-ghost);
+        }
+
+        .logo-icon svg { filter: drop-shadow(0 0 6px rgba(234,255,0,0.6)); }
+
+        .logo-text {
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            color: var(--zinc-400);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .workspace-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--yellow-ghost);
+            border: 1px solid var(--yellow-dim);
+            box-shadow: 0 0 10px rgba(234,255,0,0.1);
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--yellow);
+            letter-spacing: 0.2em;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+
+        .workspace-btn:hover {
+            background: rgba(234,255,0,0.12);
+            box-shadow: 0 0 18px rgba(234,255,0,0.25);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 214, 143, 0.06);
+            border: 1px solid rgba(0, 214, 143, 0.2);
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 214, 143, 0.4); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(0, 214, 143, 0); }
+        }
+
+        .timestamp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--zinc-400);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── STATS ROW ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 20px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--yellow-dim), transparent);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--zinc-400);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 10px;
+            margin-top: 8px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            color: var(--zinc-400);
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        /* ── MAIN GRID ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            padding: 24px;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--zinc-400);
+        }
+
+        .card-title-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--yellow);
+            margin-right: 10px;
+            box-shadow: 0 0 6px rgba(234,255,0,0.6);
+        }
+
+        .card-badge {
+            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .badge-yellow { background: var(--yellow-ghost); color: var(--yellow); border: 1px solid rgba(234,255,0,0.2); }
+        .badge-green  { background: rgba(0,214,143,0.08); color: var(--success); border: 1px solid rgba(0,214,143,0.2); }
+        .badge-muted  { background: rgba(255,255,255,0.04); color: var(--zinc-400); border: 1px solid var(--glass-border); }
+
+        /* ── AGENT GRID ── */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .agent-card {
+            background: rgba(255,255,255,0.045);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .agent-card:hover {
+            background: rgba(234,255,0,0.06);
+            border-color: rgba(234,255,0,0.15);
+        }
+
+        .agent-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .agent-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            letter-spacing: 0.02em;
+        }
+
+        .agent-emoji { font-size: 15px; }
+
+        .agent-status {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 100px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .status-online  { background: rgba(0,214,143,0.1); color: var(--success); border: 1px solid rgba(0,214,143,0.2); }
+        .status-standby { background: rgba(255,255,255,0.04); color: var(--zinc-400); border: 1px solid var(--glass-border); }
+
+        .agent-role {
+            font-size: 11px;
+            color: var(--zinc-400);
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        .agent-task {
+            font-size: 11px;
+            color: var(--zinc-400);
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── PIPELINE ── */
+        .pipeline-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .pipeline-item:last-child { border-bottom: none; }
+
+        .pipeline-stage {
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            min-width: 70px;
+            text-align: center;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+        }
+        .stage-dot { display: none; }
+        .stage-text { }
+
+        .stage-idea { background: rgba(167,139,250,0.08); color: var(--purple); border-color: rgba(167,139,250,0.2); }
+
+        .pipeline-name {
+            font-weight: 500;
+            font-size: 13px;
+            flex: 1;
+            letter-spacing: 0.02em;
+        }
+
+        .pipeline-desc {
+            font-size: 11px;
+            color: var(--zinc-400);
+            letter-spacing: 0.03em;
+        }
+
+        .pipeline-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--zinc-400);
+        }
+
+        /* ── ACTIVITY FEED ── */
+        .feed-item {
+            display: flex;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .feed-item:last-child { border-bottom: none; }
+
+        .feed-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .feed-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px rgba(234,255,0,0.5); }
+        .feed-dot.green  { background: var(--success); }
+        .feed-dot.purple { background: var(--purple); }
+
+        .feed-text {
+            font-size: 12px;
+            color: var(--zinc-400);
+            line-height: 1.5;
+        }
+
+        .feed-text strong { color: #fff; font-weight: 500; }
+
+        .feed-time {
+            font-size: 10px;
+            color: var(--zinc-400);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 3px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── FULL WIDTH ── */
+        .full-width { grid-column: 1 / -1; }
+
+        /* ── BUSINESS METRICS ── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric-block {
+            background: rgba(255,255,255,0.045);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--zinc-400);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 300;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .metric-target {
+            font-size: 10px;
+            color: var(--zinc-400);
+            margin-top: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 100px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: var(--yellow);
+            box-shadow: 0 0 8px rgba(234,255,0,0.4);
+            transition: width 1s ease;
+        }
+
+        /* ── PHASE TRACKER ── */
+        .phase-tracker {
+            display: flex;
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        .phase {
+            flex: 1;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.045);
+        }
+
+        .phase-active {
+            background: var(--yellow-ghost);
+            border-color: var(--yellow-dim);
+            box-shadow: 0 0 12px rgba(234,255,0,0.08);
+        }
+
+        .phase-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 500;
+        }
+
+        .phase-active .phase-label { color: var(--yellow); }
+        .phase-pending .phase-label { color: var(--zinc-400); }
+
+        .phase-desc {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .phase-active .phase-desc { color: var(--zinc-400); }
+        .phase-pending .phase-desc { color: var(--zinc-400); }
+
+        /* ── DIRECTIVES ── */
+        .directive-card {
+            background: rgba(255,255,255,0.045);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--glass-border);
+            border-left: 2px solid;
+        }
+
+        .directive-card.active-directive { border-left-color: var(--yellow); }
+        .directive-card.pending-directive { border-left-color: var(--zinc-800); }
+
+        .directive-label {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .directive-card.active-directive .directive-label { color: var(--yellow); }
+        .directive-card.pending-directive .directive-label { color: var(--zinc-400); }
+
+        .directive-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .directive-desc { font-size: 11px; color: var(--zinc-400); }
+
+        .directives-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* ── DIVIDER ── */
+        .section-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--zinc-900), transparent);
+            margin: 4px 0 16px;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            padding: 28px 0 12px;
+            font-size: 10px;
+            color: var(--zinc-400);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        /* ── REVEAL ANIMATION ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal.d1 { transition-delay: 0.05s; }
+        .reveal.d2 { transition-delay: 0.1s; }
+        .reveal.d3 { transition-delay: 0.15s; }
+        .reveal.d4 { transition-delay: 0.2s; }
+        .reveal.d5 { transition-delay: 0.25s; }
+        .reveal.d6 { transition-delay: 0.3s; }
+
+        /* ── NEON BORDER ANIM (header stat accent card) ── */
+        @keyframes neon-pulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(234,255,0,0.15), 0 0 14px rgba(234,255,0,0.06); }
+            50%       { box-shadow: 0 0 12px rgba(234,255,0,0.3), 0 0 28px rgba(234,255,0,0.12); }
+        }
+        .neon-card { animation: neon-pulse 3s ease-in-out infinite; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; }
+            .logo { width: 100%; justify-content: center; }
+            .logo img { max-width: 140px; }
+            .header-right { width: 100%; justify-content: center; flex-wrap: wrap; gap: 6px; }
+            .workspace-btn { padding: 8px 14px; font-size: 9px; }
+            .status-badge { padding: 6px 10px; font-size: 9px; }
+            .timestamp { font-size: 10px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .main-grid { grid-template-columns: 1fr; }
+            .agent-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .phase-tracker { flex-direction: column; }
+            .directives-grid { grid-template-columns: 1fr; }
+            .pipeline-stage { min-width: 0; padding: 0; text-align: left; letter-spacing: 0; }
+            .pipeline-stage .stage-text { display: none; }
+            .pipeline-stage .stage-dot { display: inline-block !important; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; border: none; }
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-content {
+            background: #0d0d10;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 560px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 60px rgba(234,255,0,0.06);
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 100px;
+            color: var(--zinc-400);
+            cursor: pointer;
+            font-size: 14px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .modal-section {
+            margin-top: 20px;
+        }
+        .modal-section:first-of-type { margin-top: 0; }
+        .modal-section-title {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--yellow);
+            margin-bottom: 8px;
+        }
+        .modal-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            padding-left: 20px;
+        }
+        .modal-timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 8px;
+            bottom: 8px;
+            width: 1px;
+            background: var(--zinc-800);
+        }
+        .modal-timeline-item {
+            position: relative;
+            padding: 8px 0 8px 16px;
+            font-size: 12px;
+            color: var(--zinc-400);
+            line-height: 1.5;
+        }
+        .modal-timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -17px;
+            top: 13px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--yellow-ghost);
+            border: 1px solid var(--yellow-dim);
+        }
+        .modal-timeline-item.done::before { background: var(--success); border-color: var(--success); }
+        .modal-timeline-item.now::before { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 8px rgba(234,255,0,0.6); }
+        .modal-timeline-item.todo::before { background: transparent; border-color: var(--zinc-700); }
+        .modal-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .modal-list li {
+            font-size: 12px;
+            color: var(--zinc-400);
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-list li::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .modal-list li.done::before { background: var(--success); }
+        .modal-list li.now::before { background: var(--yellow); }
+        .modal-list li.todo::before { background: var(--zinc-700); }
+        .modal-tag {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .modal-tag.active { background: rgba(0,214,143,0.08); color: var(--success); border: 1px solid rgba(0,214,143,0.2); }
+        .modal-tag.idea { background: rgba(167,139,250,0.08); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+        .modal-link {
+            color: var(--yellow);
+            text-decoration: none;
+            font-size: 12px;
+            transition: opacity 0.2s;
+        }
+        .modal-link:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- Header -->
+    <header class="header reveal visible">
+        <div class="logo">
+            <div style="display: flex; flex-direction: column; align-items: stretch; gap: 4px;">
+                <div style="display: flex; justify-content: center;">
+                    <img src="logo-volt.png" alt="Volt Labs" style="width: 100%; max-width: 160px; height: auto;">
+                </div>
+                <div class="logo-sub" style="margin-top: 0; font-size: 12px; letter-spacing: 0.2em; text-align: center;">Command Center</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a class="workspace-btn" href="team.html">
+                🕹️ &nbsp;Workspace
+            </a>
+            <a class="workspace-btn" style="background:var(--accent);" href="trend-tracker.html">
+                📊 &nbsp;Trend Tracker
+            </a>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                Systems Online
+            </div>
+            <div class="timestamp" id="clock"></div>
+        </div>
+    </header>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card glass reveal d1 neon-card">
+            <div class="stat-label">Agents Active</div>
+            <div class="stat-value" style="color: var(--yellow);">4<span style="font-size:18px;color:var(--zinc-500);font-weight:400;">/7</span></div>
+            <div class="stat-change">CEO online — fleet on standby</div>
+        </div>
+        <div class="stat-card glass reveal d2">
+            <div class="stat-label">Products in Pipeline</div>
+            <div class="stat-value" style="color:#fff;">5</div>
+            <div class="stat-change">Pending market validation</div>
+        </div>
+        <div class="stat-card glass reveal d3">
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-value" style="color: var(--success);">$0</div>
+            <div class="stat-change">Target: $5K–$20K (Phase 1)</div>
+        </div>
+        <div class="stat-card glass reveal d4">
+            <div class="stat-label">Company Age</div>
+            <div class="stat-value" id="company-age" style="color:#fff;">Day 1</div>
+            <div class="stat-change positive">⚡ Founded Mar 26, 2026</div>
+        </div>
+    </div>
+
+        <!-- Product Pipeline -->
+        <div class="card glass reveal d1">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-dot"></span>Product Pipeline
+                </div>
+                <div class="card-badge badge-muted" id="pipeline-badge">10 Total</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('website-rebuilder')" style="cursor:pointer;">
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div>
+                    <div class="pipeline-name">Website Rebuilder</div>
+                    <div class="pipeline-desc">AI-powered site reconstruction & automation</div>
+                </div>
+                <div class="pipeline-score" style="color: var(--success); font-weight: 600;">In Dev</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('lunar-pixel')" style="cursor:pointer;">
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div>
+                    <div class="pipeline-name">Lunar Pixel — POD Shirt Store</div>
+                    <div class="pipeline-desc">Print-on-demand merch via Shopify + Printify</div>
+                </div>
+                <div class="pipeline-score" style="color: var(--success); font-weight: 600;">In Dev</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('magnolia-made')" style="cursor:pointer;">
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div>
+                    <div class="pipeline-name">Magnolia Made Cookies</div>
+                    <div class="pipeline-desc">Brand storefront development</div>
+                </div>
+                <div class="pipeline-score" style="color: var(--success); font-weight: 600;">In Dev</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('trend-tracker')" style="cursor:pointer;">
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div>
+                    <div class="pipeline-name">Trend Tracker — POD Intel</div>
+                    <div class="pipeline-desc">Browser-based trend logging & action pipeline</div>
+                </div>
+                <div class="pipeline-score" style="color: var(--success); font-weight: 600;">Live</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('vestaos')" style="cursor:pointer;">
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div>
+                    <div class="pipeline-name">VestaOS — Property Management</div>
+                    <div class="pipeline-desc">Internal admin tool — property profiles, tenant mgmt, cash flow, documents &amp; maintenance tracking</div>
+                </div>
+                <div class="pipeline-score" style="color: var(--success); font-weight: 600;">In Dev</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('competitive-intel')" style="cursor:pointer;">
+                <div class="pipeline-stage stage-idea"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Idea</span></div>
+                <div>
+                    <div class="pipeline-name">Competitive Intel Dashboard</div>
+                    <div class="pipeline-desc">AI-powered competitor monitoring for teams</div>
+                </div>
+                <div class="pipeline-score">9/12</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('instant-api')" style="cursor:pointer;">
+                <div class="pipeline-stage stage-idea"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Idea</span></div>
+                <div>
+                    <div class="pipeline-name">Instant API Builder</div>
+                    <div class="pipeline-desc">Plain English → production REST API</div>
+                </div>
+                <div class="pipeline-score">8/12</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('legal-doc')" style="cursor:pointer;">
+                <div class="pipeline-stage stage-idea"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Idea</span></div>
+                <div>
+                    <div class="pipeline-name">Legal Doc Generator</div>
+                    <div class="pipeline-desc">AI-crafted contracts, NDAs, ToS</div>
+                </div>
+                <div class="pipeline-score">8/12</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('dev-team')" style="cursor:pointer;">
+                <div class="pipeline-stage stage-idea"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Idea</span></div>
+                <div>
+                    <div class="pipeline-name">Dev Team in a Box</div>
+                    <div class="pipeline-desc">Describe your app → AI builds &amp; deploys it</div>
+                </div>
+                <div class="pipeline-score">10/12</div>
+            </div>
+            <div class="pipeline-item" onclick="openProjectModal('website-auditor')" style="cursor:pointer;">
+                <div class="pipeline-stage stage-idea"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Idea</span></div>
+                <div>
+                    <div class="pipeline-name">Website Auditor &amp; Fixer</div>
+                    <div class="pipeline-desc">Scan, report, and auto-fix site issues</div>
+                </div>
+                <div class="pipeline-score">7/12</div>
+            </div>
+        </div>
+
+
+    <div class="section-divider"></div>
+
+    <div class="main-grid">
+    <!-- ── EXPENSE REPORT SECTION ── -->
+    <div class="card glass reveal d5 full-width">
+        <div class="card-header">
+            <div class="card-title">
+                <span class="card-title-dot"></span>💰 Expense Report
+            </div>
+            <div class="card-badge badge-yellow" id="expense-badge">$105/yr</div>
+        </div>
+        <div class="metrics-grid" >
+            <div class="metric-block">
+                <div class="metric-label">Monthly Total</div>
+                <div class="metric-value" id="expense-monthly" style="color: var(--yellow);">$8.75</div>
+                <div class="metric-target">Includes annualized costs</div>
+            </div>
+            <div class="metric-block">
+                <div class="metric-label">Annual Total</div>
+                <div class="metric-value" id="expense-annual" style="color: #fff;">$105.00</div>
+                <div class="metric-target">Across all subscriptions</div>
+            </div>
+            <div class="metric-block">
+                <div class="metric-label">Pending Approval</div>
+                <div class="metric-value" id="expense-pending" style="color: var(--warning);">$7/mo</div>
+                <div class="metric-target">Kling AI — considering</div>
+            </div>
+        </div>
+        <div id="expense-filters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:16px;margin-bottom:12px;padding-top:14px;border-top:1px solid var(--glass-border);">
+            <button class="exp-filter-btn" data-project="all" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--yellow);background:rgba(234,255,0,0.1);color:var(--yellow);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">All</button>
+            <button class="exp-filter-btn" data-project="volt-operations" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--glass-border-strong);background:transparent;color:var(--zinc-400);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">⚡ Volt Ops</button>
+            <button class="exp-filter-btn" data-project="vestaos" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--glass-border-strong);background:transparent;color:var(--zinc-400);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">🏠 VestaOS</button>
+            <button class="exp-filter-btn" data-project="lunar-pixel" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--glass-border-strong);background:transparent;color:var(--zinc-400);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">🌙 Lunar Pixel</button>
+            <button class="exp-filter-btn" data-project="magnolia-made" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--glass-border-strong);background:transparent;color:var(--zinc-400);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">🍪 Magnolia Made</button>
+            <button class="exp-filter-btn" data-project="website-rebuilder" style="font-size:9px;padding:3px 10px;border-radius:100px;border:1px solid var(--glass-border-strong);background:transparent;color:var(--zinc-400);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.05em;transition:all 0.15s;">🔧 Site Rebuilder</button>
+        </div>
+        <div class="card" style="padding: 0; background: transparent; border: none;">
+            <div class="card-header" style="padding: 0; display:flex;align-items:center;justify-content:space-between;">
+                <div class="card-title" style="color: var(--zinc-400);">Subscriptions</div>
+                <div class="card-badge badge-muted" id="expense-count">2 items</div>
+            </div>
+            <div id="expense-items">
+                <div class="pipeline-item expense-row" data-name="Midjourney" data-amount="105" data-cycle="yearly" data-status="active" data-project="volt-operations">
+                    <div class="pipeline-stage stage-idea" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="pipeline-name">Midjourney</div>
+                        <div class="pipeline-desc">Volt Operations · AI image generation · Annual</div>
+                    </div>
+                    <div class="pipeline-score" style="font-family: 'Inter', sans-serif; font-weight: 600; color: #fff; white-space: nowrap;">$105/yr</div>
+                    <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                    <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                    <div style="font-size:9px;color:var(--zinc-600);font-family:'JetBrains Mono',monospace;padding:0 4px;display:none;" class="exp-project-tag">⚡ Volt Ops</div>
+                </div>
+                <div class="pipeline-item expense-row" data-name="Lunar Pixel Domain" data-amount="13" data-cycle="yearly" data-status="active" data-project="lunar-pixel">
+                    <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="pipeline-name">lunarpixel.co (GoDaddy)</div>
+                        <div class="pipeline-desc">Lunar Pixel · Domain registration · Annual</div>
+                    </div>
+                    <div class="pipeline-score" style="font-family: 'Inter', sans-serif; font-weight: 600; color: #fff; white-space: nowrap;">$13/yr</div>
+                    <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                    <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                    <div style="font-size:9px;color:var(--zinc-600);font-family:'JetBrains Mono',monospace;padding:0 4px;display:none;" class="exp-project-tag">🌙 Lunar Pixel</div>
+                </div>
+                <div class="pipeline-item expense-row" data-name="Kling AI" data-amount="7" data-cycle="monthly" data-status="pending" data-project="volt-operations">
+                    <div class="pipeline-stage" style="background: rgba(255,184,0,0.08); color: var(--warning); border-color: rgba(255,184,0,0.2);"><span class="stage-dot" style="background:var(--warning);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Pending</span></div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="pipeline-name">Kling AI</div>
+                        <div class="pipeline-desc">Volt Operations · AI video generation · Considering</div>
+                    </div>
+                    <div class="pipeline-score" style="font-family: 'Inter', sans-serif; font-weight: 600; color: var(--warning); white-space: nowrap;">$7/mo ✏️</div>
+                    <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                    <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                    <div style="font-size:9px;color:var(--zinc-600);font-family:'JetBrains Mono',monospace;padding:0 4px;display:none;" class="exp-project-tag">⚡ Volt Ops</div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end;">
+            <button class="workspace-btn" onclick="addExpense()" style="font-size: 9px; padding: 8px 16px;">+ Add Expense</button>
+            <button class="workspace-btn" onclick="toggleView()" style="font-size: 9px; padding: 8px 16px; background: rgba(255,255,255,0.04); border-color: var(--glass-border-strong); color: var(--zinc-400);">View as Table</button>
+        </div>
+    </div>
+
+
+        <!-- Agent Fleet -->
+        <div class="card glass reveal d2">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-dot"></span>Agent Fleet
+                </div>
+                <div class="card-badge badge-muted">7 Agents</div>
+            </div>
+            <div class="agent-grid">
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">🐾</span> Chombi</div>
+                        <div class="agent-status status-online">Online</div>
+                    </div>
+                    <div class="agent-role">CEO & Chief Operator</div>
+                    <div class="agent-task">coordinating launch sequence</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">📊</span> Scout</div>
+                        <div class="agent-status status-standby">Standby</div>
+                    </div>
+                    <div class="agent-role">Market Intelligence</div>
+                    <div class="agent-task">awaiting deployment</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">💡</span> Spark</div>
+                        <div class="agent-status status-online">Online</div>
+                    </div>
+                    <div class="agent-role">Market Intel & Strategy</div>
+                    <div class="agent-task">research, competitors, data</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">👨‍💻</span> Arc</div>
+                        <div class="agent-status status-online">Online</div>
+                    </div>
+                    <div class="agent-role">Lead Developer</div>
+                    <div class="agent-task">VestaOS full-stack development</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">✍️</span> Flux</div>
+                        <div class="agent-status status-online">Online</div>
+                    </div>
+                    <div class="agent-role">Content & Copy</div>
+                    <div class="agent-task">product copy, SEO, branding</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">🧪</span> Ohm</div>
+                        <div class="agent-status status-standby">Standby</div>
+                    </div>
+                    <div class="agent-role">QA & Testing</div>
+                    <div class="agent-task">awaiting deployment</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-top">
+                        <div class="agent-name"><span class="agent-emoji">🚀</span> Surge</div>
+                        <div class="agent-status status-standby">Standby</div>
+                    </div>
+                    <div class="agent-role">DevOps & Infra</div>
+                    <div class="agent-task">awaiting deployment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="card glass reveal d2">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-dot"></span>Activity Feed
+                </div>
+                <div class="card-badge badge-green">Live</div>
+            </div>
+                        <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> updated Lunar Pixel logo — new SVG with thunderbolt icon ⚡</div>
+                    <div class="feed-time">Jun 2 · 10:50 AM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> shipped Trend Tracker — POD trend logging tool with action pipeline 📊</div>
+                    <div class="feed-time">Jun 4 · 2:54 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> migrated all projects to GitHub Pages (bye bye Netlify) 🚀</div>
+                    <div class="feed-time">Jun 4 · 2:54 PM ET</div>
+                </div>
+            </div>
+<div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> updated Lunar Pixel dashboard — domain live (shop.lunarpixel.co), first shirt (Capsule Corp.) created, Printify installed</div>
+                    <div class="feed-time">Jun 1 · 1:57 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Jaime Luna</strong> created first POD product — Capsule Corp. Dragon Ball Z shirt 🐉</div>
+                    <div class="feed-time">Jun 1 · 10:05 AM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot yellow"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> created Volt Labs command center dashboard</div>
+                    <div class="feed-time">Mar 26 · 10:56 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot yellow"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> generated 5 product concepts for pipeline</div>
+                    <div class="feed-time">Mar 26 · 10:45 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> established agent org chart — 6 agents defined</div>
+                    <div class="feed-time">Mar 26 · 10:42 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> drafted Volt Labs business plan v0.1</div>
+                    <div class="feed-time">Mar 26 · 10:40 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot purple"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> created brand identity — colors, voice, guidelines</div>
+                    <div class="feed-time">Mar 26 · 10:38 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot yellow"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> added expense tracking & updated pipeline — Website Rebuilder + POD Store marked active</div>
+                    <div class="feed-time">May 28 · 11:58 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> deployed dashboard as persistent launchd service</div>
+                    <div class="feed-time">May 28 · 11:57 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot green"></div>
+                <div>
+                    <div class="feed-text"><strong>Chombi</strong> built VestaOS v0.1 — property detail page, add property form, add tenant form, SQLite database, deployed to Vercel</div>
+                    <div class="feed-time">May 30 · 11:47 PM ET</div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-dot yellow"></div>
+                <div>
+                    <div class="feed-text"><strong>Jaime Luna</strong> founded Volt Labs ⚡</div>
+                    <div class="feed-time">Mar 26 · 10:27 PM ET</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Phase -->
+        <div class="card glass reveal d4">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-dot"></span>Business Roadmap
+                </div>
+                <div class="card-badge badge-yellow">Phase 1</div>
+            </div>
+            <div class="phase-tracker">
+                <div class="phase phase-active">
+                    <div class="phase-label">Phase 1</div>
+                    <div class="phase-desc">Internal Products</div>
+                </div>
+                <div class="phase phase-pending">
+                    <div class="phase-label">Phase 2</div>
+                    <div class="phase-desc">Client Services</div>
+                </div>
+                <div class="phase phase-pending">
+                    <div class="phase-label">Phase 3</div>
+                    <div class="phase-desc">Scale & Productize</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 8%;"></div>
+            </div>
+            <div style="margin-top: 20px;">
+                <div class="metrics-grid">
+                    <div class="metric-block">
+                        <div class="metric-label">MRR</div>
+                        <div class="metric-value" style="color: var(--success);">$0</div>
+                        <div class="metric-target">Target: $20K</div>
+                    </div>
+                    <div class="metric-block">
+                        <div class="metric-label">Products Shipped</div>
+                        <div class="metric-value" style="color: var(--yellow);">5</div>
+                        <div class="metric-target">In development</div>
+                    </div>
+                    <div class="metric-block">
+                        <div class="metric-label">Clients</div>
+                        <div class="metric-value" style="color: #fff;">0</div>
+                        <div class="metric-target">Target: 5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chairman's Corner -->
+        <div class="card glass full-width reveal d6">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-dot"></span>Chairman's Directives
+                </div>
+                <div class="card-badge badge-yellow">Action Needed</div>
+            </div>
+            <div class="directives-grid">
+                <div class="directive-card active-directive">
+                    <div class="directive-label">Active Directive</div>
+                    <div class="directive-title">VestaOS — Property Management</div>
+                    <div class="directive-desc">Building internal admin tool: property CRUD, tenant CRUD, cash flow, maintenance tracking. Stack: Next.js 16, Prisma 7 + SQLite, Tailwind v4. Live on Vercel.</div>
+                </div>
+                <div class="directive-card active-directive">
+                    <div class="directive-label">Active Directive</div>
+                    <div class="directive-title">Build sub-agent fleet</div>
+                    <div class="directive-desc">Spin up agents on Gemini Flash when ready</div>
+                </div>
+                <div class="directive-card pending-directive">
+                    <div class="directive-label">Upcoming</div>
+                    <div class="directive-title">Magnolia Made Cookies storefront</div>
+                    <div class="directive-desc">Brand storefront development</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="project-modal" class="modal-overlay" onclick="closeProjectModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    </div>
+
+    <footer class="footer">
+        Volt Labs ⚡ Command Center — Internal Use Only
+    </footer>
+
+</div>
+
+<script>
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    reveals.forEach(r => observer.observe(r));
+
+    // Live clock
+    function updateClock() {
+        const now = new Date();
+        const opts = {
+            timeZone: 'America/New_York',
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        };
+        document.getElementById('clock').textContent = now.toLocaleString('en-US', opts) + ' ET';
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Company age calculator
+    function updateAge() {
+        const founded = new Date('2026-03-26T22:27:00-04:00');
+        const now = new Date();
+        const diff = now - founded;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        if (days === 0) {
+            document.getElementById('company-age').textContent = hours + 'h';
+        } else {
+            document.getElementById('company-age').textContent = 'Day ' + (days + 1);
+        }
+    }
+    updateAge();
+    setInterval(updateAge, 60000);
+
+        // ── EXPENSE TRACKER ──
+    function recalcExpenses() {
+        const rows = document.querySelectorAll('.expense-row');
+        // Determine current filter from data-active attribute
+        const activeBtn = document.querySelector('.exp-filter-btn[data-active="true"]');
+        const currentProject = activeBtn ? activeBtn.dataset.project : 'all';
+        
+        let monthlyTotal = 0;
+        let annualTotal = 0;
+        let pendingMonthly = 0;
+        let activeCount = 0;
+
+        rows.forEach(row => {
+            const amt = parseFloat(row.dataset.amount) || 0;
+            const cycle = row.dataset.cycle;
+            const status = row.dataset.status;
+            const project = row.dataset.project || 'volt-operations';
+
+            // Skip if filtered out
+            if (currentProject !== 'all' && project !== currentProject) return;
+
+            if (status === 'owned') return;
+
+            if (status === 'pending') {
+                if (cycle !== 'onetime') {
+                    pendingMonthly += cycle === 'monthly' ? amt : (amt / 12);
+                }
+                return;
+            }
+
+            // active
+            if (cycle === 'onetime') {
+                annualTotal += amt;
+            } else {
+                const monthly = cycle === 'monthly' ? amt : (amt / 12);
+                monthlyTotal += monthly;
+                annualTotal += cycle === 'yearly' ? amt : (amt * 12);
+            }
+            activeCount++;
+        });
+
+        document.getElementById('expense-monthly').textContent = '$' + monthlyTotal.toFixed(2);
+        document.getElementById('expense-annual').textContent = '$' + annualTotal.toFixed(2);
+        document.getElementById('expense-badge').textContent = '$' + annualTotal.toFixed(2) + '/yr';
+        document.getElementById('expense-count').textContent = activeCount + ' items';
+        document.getElementById('expense-pending').textContent = '$' + pendingMonthly.toFixed(2) + '/mo';
+    }
+    recalcExpenses();
+
+    // ── EXPENSE FILTER ──
+    function filterExpenses(project) {
+        const rows = document.querySelectorAll('.expense-row');
+        const btns = document.querySelectorAll('.exp-filter-btn');
+        btns.forEach(b => {
+            b.dataset.active = b.dataset.project === project ? 'true' : 'false';
+            if (b.dataset.project === project) {
+                b.style.background = 'rgba(234,255,0,0.1)';
+                b.style.borderColor = 'var(--yellow)';
+                b.style.color = 'var(--yellow)';
+            } else {
+                b.style.background = 'transparent';
+                b.style.borderColor = 'var(--glass-border-strong)';
+                b.style.color = 'var(--zinc-400)';
+            }
+        });
+        rows.forEach(row => {
+            const rowProject = row.dataset.project || 'volt-operations';
+            row.style.display = (project === 'all' || rowProject === project) ? '' : 'none';
+        });
+        recalcExpenses();
+    }
+
+    // Wire up filter buttons
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.exp-filter-btn');
+        if (btn) filterExpenses(btn.dataset.project);
+    });
+
+    function addExpense() {
+        // Create a custom modal instead of native prompt/confirm
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);';
+        
+        overlay.innerHTML = `
+            <div style="background:#18181b;border:1px solid var(--glass-border);border-radius:16px;padding:28px;width:400px;max-width:90vw;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+                <h2 style="font-size:16px;font-weight:500;margin-bottom:20px;letter-spacing:-0.01em;">Add Expense</h2>
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Expense name</label>
+                <input id="exp-modal-name" type="text" placeholder="e.g. Midjourney" 
+                    style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Amount ($)</label>
+                <input id="exp-modal-amount" type="number" step="0.01" min="0" placeholder="0.00"
+                    style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Project</label>
+                <select id="exp-modal-project" style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;cursor:pointer;font-family:'Inter',sans-serif;-webkit-appearance:none;appearance:none;">
+                    <option value="volt-operations">⚡ Volt Operations (General)</option>
+                    <option value="vestaos">🏠 VestaOS</option>
+                    <option value="lunar-pixel">🌙 Lunar Pixel</option>
+                    <option value="magnolia-made">🍪 Magnolia Made</option>
+                    <option value="website-rebuilder">🔧 Website Rebuilder</option>
+                </select>
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:8px;">Billing cycle</label>
+                <div style="display:flex;gap:8px;margin-bottom:24px;">
+                    <button class="exp-cycle-btn" data-cycle="monthly" style="flex:1;padding:10px;background:var(--zinc-900);border:2px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">Monthly</button>
+                    <button class="exp-cycle-btn" data-cycle="yearly" style="flex:1;padding:10px;background:var(--zinc-900);border:2px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">Yearly</button>
+                    <button class="exp-cycle-btn" data-cycle="onetime" style="flex:1;padding:10px;background:var(--zinc-900);border:2px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">One-time</button>
+                </div>
+                
+                <div style="display:flex;gap:10px;">
+                    <button id="exp-modal-cancel" style="flex:1;padding:10px;background:transparent;border:1px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                    <button id="exp-modal-add" style="flex:1;padding:10px;background:var(--yellow);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Add Expense</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        let selectedCycle = 'monthly';
+        const btns = overlay.querySelectorAll('.exp-cycle-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => {
+                    b.style.background = 'var(--zinc-900)';
+                    b.style.borderColor = 'var(--zinc-700)';
+                    b.style.color = 'var(--zinc-400)';
+                });
+                btn.style.background = 'rgba(234,255,0,0.1)';
+                btn.style.borderColor = 'var(--yellow)';
+                btn.style.color = 'var(--yellow)';
+                selectedCycle = btn.dataset.cycle;
+            });
+        });
+        // Default to monthly selected
+        btns[0].style.background = 'rgba(234,255,0,0.1)';
+        btns[0].style.borderColor = 'var(--yellow)';
+        btns[0].style.color = 'var(--yellow)';
+        
+        overlay.querySelector('#exp-modal-cancel').addEventListener('click', () => overlay.remove());
+        overlay.querySelector('#exp-modal-add').addEventListener('click', () => {
+            const name = overlay.querySelector('#exp-modal-name').value.trim();
+            const amount = parseFloat(overlay.querySelector('#exp-modal-amount').value);
+            const project = overlay.querySelector('#exp-modal-project').value;
+            if (!name || isNaN(amount) || amount <= 0) return;
+            
+            const container = document.getElementById('expense-items');
+            const row = createExpenseRow(name, amount, selectedCycle, project);
+            container.appendChild(row);
+            recalcExpenses();
+            overlay.remove();
+        });
+        
+        // Enter key support
+        overlay.querySelector('#exp-modal-amount').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') overlay.querySelector('#exp-modal-add').click();
+        });
+        overlay.querySelector('#exp-modal-name').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') overlay.querySelector('#exp-modal-amount').focus();
+        });
+        
+        // Focus name input
+        setTimeout(() => overlay.querySelector('#exp-modal-name').focus(), 100);
+    }
+
+    function createExpenseRow(name, amount, cycle, project) {
+        const row = document.createElement('div');
+        row.className = 'pipeline-item expense-row';
+        row.dataset.name = name;
+        row.dataset.amount = amount;
+        row.dataset.cycle = cycle;
+        row.dataset.status = 'active';
+        row.dataset.project = project || 'volt-operations';
+        
+        let cycleLabel, cycleText;
+        if (cycle === 'yearly') { cycleLabel = '/yr'; cycleText = 'Annual'; }
+        else if (cycle === 'onetime') { cycleLabel = ''; cycleText = 'One-time'; }
+        else { cycleLabel = '/mo'; cycleText = 'Monthly'; }
+        
+        const projectLabels = {
+            'volt-operations': { label: 'Volt Operations', tag: '⚡ Volt Ops' },
+            'vestaos': { label: 'VestaOS', tag: '🏠 VestaOS' },
+            'lunar-pixel': { label: 'Lunar Pixel', tag: '🌙 Lunar Pixel' },
+            'magnolia-made': { label: 'Magnolia Made', tag: '🍪 Magnolia Made' },
+            'website-rebuilder': { label: 'Website Rebuilder', tag: '🔧 Site Rebuilder' },
+        };
+        const pl = projectLabels[project] || { label: project || 'Volt Operations', tag: project || '⚡ Ops' };
+        
+        row.innerHTML = `
+            <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+            <div style="flex:1;min-width:0;">
+                <div class="pipeline-name">${name}</div>
+                <div class="pipeline-desc">${pl.label} · ${cycleText}</div>
+            </div>
+            <div class="pipeline-score" style="font-family: 'Inter', sans-serif; font-weight: 600; color: #fff; white-space: nowrap;">\$${amount.toFixed(2)}${cycleLabel}</div>
+            <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+            <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+            <div style="font-size:9px;color:var(--zinc-600);font-family:'JetBrains Mono',monospace;padding:0 4px;display:none;" class="exp-project-tag">${pl.tag}</div>
+        `;
+        return row;
+    }
+
+    function deleteExpense(btn) {
+        const row = btn.closest('.expense-row');
+        if (!row) return;
+        const name = row.dataset.name || 'this expense';
+        
+        // Custom confirm modal
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(4px);';
+        overlay.innerHTML = `
+            <div style="background:#18181b;border:1px solid var(--glass-border);border-radius:16px;padding:28px;width:340px;max-width:90vw;box-shadow:0 24px 80px rgba(0,0,0,0.6);text-align:center;">
+                <div style="font-size:32px;margin-bottom:12px;">🗑️</div>
+                <h2 style="font-size:15px;font-weight:500;margin-bottom:8px;letter-spacing:-0.01em;">Remove expense?</h2>
+                <p style="font-size:12px;color:var(--zinc-400);margin-bottom:24px;line-height:1.5;">Are you sure you want to delete <strong style="color:#fff;">${name}</strong>?</p>
+                <div style="display:flex;gap:10px;">
+                    <button id="del-modal-cancel" style="flex:1;padding:10px;background:transparent;border:1px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                    <button id="del-modal-confirm" style="flex:1;padding:10px;background:#ef4444;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Delete</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        overlay.querySelector('#del-modal-cancel').addEventListener('click', () => overlay.remove());
+        overlay.querySelector('#del-modal-confirm').addEventListener('click', () => {
+            row.style.opacity = '0.3';
+            row.style.transition = 'opacity 0.2s';
+            setTimeout(() => {
+                row.remove();
+                recalcExpenses();
+            }, 200);
+            overlay.remove();
+        });
+    }
+
+    function editExpense(btn) {
+        const row = btn.closest('.expense-row');
+        if (!row) return;
+        const name = row.dataset.name;
+        const amount = parseFloat(row.dataset.amount) || 0;
+        const cycle = row.dataset.cycle || 'monthly';
+        const project = row.dataset.project || 'volt-operations';
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(4px);';
+        
+        overlay.innerHTML = `
+            <div style="background:#18181b;border:1px solid var(--glass-border);border-radius:16px;padding:28px;width:400px;max-width:90vw;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+                <h2 style="font-size:16px;font-weight:500;margin-bottom:20px;letter-spacing:-0.01em;">Edit Expense</h2>
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Expense name</label>
+                <input id="exp-edit-name" type="text" style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Amount ($)</label>
+                <input id="exp-edit-amount" type="number" step="0.01" min="0" style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:6px;">Project</label>
+                <select id="exp-edit-project" style="width:100%;padding:10px 12px;background:var(--zinc-900);border:1px solid var(--zinc-700);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;cursor:pointer;font-family:'Inter',sans-serif;-webkit-appearance:none;appearance:none;">
+                    <option value="volt-operations">⚡ Volt Operations (General)</option>
+                    <option value="vestaos">🏠 VestaOS</option>
+                    <option value="lunar-pixel">🌙 Lunar Pixel</option>
+                    <option value="magnolia-made">🍪 Magnolia Made</option>
+                    <option value="website-rebuilder">🔧 Website Rebuilder</option>
+                </select>
+                
+                <label style="font-size:11px;color:var(--zinc-400);letter-spacing:0.05em;display:block;margin-bottom:8px;">Billing cycle</label>
+                <div style="display:flex;gap:8px;margin-bottom:24px;">
+                    <button class="exp-edit-cycle-btn" data-cycle="monthly" style="flex:1;padding:10px;background:${cycle === 'monthly' ? 'rgba(234,255,0,0.1)' : 'var(--zinc-900)'};border:2px solid ${cycle === 'monthly' ? 'var(--yellow)' : 'var(--zinc-700)'};border-radius:8px;color:${cycle === 'monthly' ? 'var(--yellow)' : 'var(--zinc-400)'};font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">Monthly</button>
+                    <button class="exp-edit-cycle-btn" data-cycle="yearly" style="flex:1;padding:10px;background:${cycle === 'yearly' ? 'rgba(234,255,0,0.1)' : 'var(--zinc-900)'};border:2px solid ${cycle === 'yearly' ? 'var(--yellow)' : 'var(--zinc-700)'};border-radius:8px;color:${cycle === 'yearly' ? 'var(--yellow)' : 'var(--zinc-400)'};font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">Yearly</button>
+                    <button class="exp-edit-cycle-btn" data-cycle="onetime" style="flex:1;padding:10px;background:${cycle === 'onetime' ? 'rgba(234,255,0,0.1)' : 'var(--zinc-900)'};border:2px solid ${cycle === 'onetime' ? 'var(--yellow)' : 'var(--zinc-700)'};border-radius:8px;color:${cycle === 'onetime' ? 'var(--yellow)' : 'var(--zinc-400)'};font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;">One-time</button>
+                </div>
+                
+                <div style="display:flex;gap:10px;">
+                    <button id="exp-edit-cancel" style="flex:1;padding:10px;background:transparent;border:1px solid var(--zinc-700);border-radius:8px;color:var(--zinc-400);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                    <button id="exp-edit-save" style="flex:1;padding:10px;background:var(--yellow);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Save Changes</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        // Set values after DOM creation to avoid injection issues
+        overlay.querySelector('#exp-edit-name').value = name;
+        overlay.querySelector('#exp-edit-amount').value = amount.toFixed(2);
+        overlay.querySelector('#exp-edit-project').value = project;
+        
+        let selectedCycle = cycle;
+        const btns = overlay.querySelectorAll('.exp-edit-cycle-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => {
+                    b.style.background = 'var(--zinc-900)';
+                    b.style.borderColor = 'var(--zinc-700)';
+                    b.style.color = 'var(--zinc-400)';
+                });
+                btn.style.background = 'rgba(234,255,0,0.1)';
+                btn.style.borderColor = 'var(--yellow)';
+                btn.style.color = 'var(--yellow)';
+                selectedCycle = btn.dataset.cycle;
+            });
+        });
+        
+        overlay.querySelector('#exp-edit-cancel').addEventListener('click', () => overlay.remove());
+        overlay.querySelector('#exp-edit-save').addEventListener('click', () => {
+            const newName = overlay.querySelector('#exp-edit-name').value.trim();
+            const newAmount = parseFloat(overlay.querySelector('#exp-edit-amount').value);
+            const newProject = overlay.querySelector('#exp-edit-project').value;
+            if (!newName || isNaN(newAmount) || newAmount <= 0) return;
+            
+            row.dataset.name = newName;
+            row.dataset.amount = newAmount;
+            row.dataset.cycle = selectedCycle;
+            row.dataset.project = newProject;
+            row.dataset.status = 'active';
+            
+            const projectLabels = {
+                'volt-operations': { label: 'Volt Operations', tag: '⚡ Volt Ops' },
+                'vestaos': { label: 'VestaOS', tag: '🏠 VestaOS' },
+                'lunar-pixel': { label: 'Lunar Pixel', tag: '🌙 Lunar Pixel' },
+                'magnolia-made': { label: 'Magnolia Made', tag: '🍪 Magnolia Made' },
+                'website-rebuilder': { label: 'Website Rebuilder', tag: '🔧 Site Rebuilder' },
+            };
+            const pl = projectLabels[newProject] || { label: newProject, tag: newProject };
+            
+            let cycleLabel, cycleText;
+            if (selectedCycle === 'yearly') { cycleLabel = '/yr'; cycleText = 'Annual'; }
+            else if (selectedCycle === 'onetime') { cycleLabel = ''; cycleText = 'One-time'; }
+            else { cycleLabel = '/mo'; cycleText = 'Monthly'; }
+            
+            row.innerHTML = `
+                <div class="pipeline-stage" style="background: rgba(0,214,143,0.08); color: var(--success); border-color: rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>
+                <div style="flex:1;min-width:0;">
+                    <div class="pipeline-name">${newName}</div>
+                    <div class="pipeline-desc">${pl.label} · ${cycleText}</div>
+                </div>
+                <div class="pipeline-score" style="font-family: 'Inter', sans-serif; font-weight: 600; color: #fff; white-space: nowrap;">\$${newAmount.toFixed(2)}${cycleLabel}</div>
+                <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                <div style="font-size:9px;color:var(--zinc-600);font-family:'JetBrains Mono',monospace;padding:0 4px;display:none;" class="exp-project-tag">${pl.tag}</div>
+            `;
+            recalcExpenses();
+            overlay.remove();
+        });
+        
+        setTimeout(() => overlay.querySelector('#exp-edit-name').focus(), 100);
+    }
+
+    let tableView = false;
+    function toggleView() {
+        tableView = !tableView;
+        const rows = document.querySelectorAll('.expense-row');
+        const btn = document.querySelector('button[onclick*="toggleView"]');
+        btn.textContent = tableView ? 'View as Cards' : 'View as Table';
+        
+        const projectTags = {
+            'volt-operations': '⚡ Volt Ops',
+            'vestaos': '🏠 VestaOS',
+            'lunar-pixel': '🌙 Lunar Pixel',
+            'magnolia-made': '🍪 Magnolia Made',
+            'website-rebuilder': '🔧 Site Rebuilder',
+        };
+        
+        rows.forEach(row => {
+            const name = row.dataset.name;
+            const amt = parseFloat(row.dataset.amount) || 0;
+            const cycle = row.dataset.cycle;
+            const status = row.dataset.status;
+            const project = row.dataset.project || 'volt-operations';
+            const projTag = projectTags[project] || project;
+            
+            let cycleLabel, cycleText;
+            if (cycle === 'yearly') { cycleLabel = '/yr'; cycleText = 'Annual'; }
+            else if (cycle === 'onetime') { cycleLabel = ''; cycleText = 'One-time'; }
+            else { cycleLabel = '/mo'; cycleText = 'Monthly'; }
+
+            if (tableView) {
+                row.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:10px;width:100%;font-size:12px;">
+                        <span style="width:80px;font-size:9px;padding:3px 8px;border-radius:100px;text-align:center;text-transform:uppercase;letter-spacing:0.15em;font-weight:400;
+                            ${status === 'active' ? 'background:rgba(0,214,143,0.08);color:var(--success);border:1px solid rgba(0,214,143,0.2);' :
+                              status === 'owned' ? 'background:rgba(167,139,250,0.08);color:var(--purple);border:1px solid rgba(167,139,250,0.2);' :
+                              'background:rgba(255,184,0,0.08);color:var(--warning);border:1px solid rgba(255,184,0,0.2);'}">
+                            ${status.charAt(0).toUpperCase() + status.slice(1)}
+                        </span>
+                        <span style="flex:1;font-weight:500;">${name}</span>
+                        <span style="color:var(--zinc-500);font-size:10px;">${projTag}</span>
+                        <span style="color:var(--zinc-400);font-size:11px;">${cycleText}</span>
+                        <span style="font-weight:600;font-family:'JetBrains Mono',monospace;">\$${amt.toFixed(2)}${cycleLabel}</span>
+                        <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:12px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                        <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:14px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                    </div>
+                `;
+            } else {
+                row.innerHTML = `
+                    ${status === 'active'
+                        ? `<div class="pipeline-stage" style="background:rgba(0,214,143,0.08);color:var(--success);border-color:rgba(0,214,143,0.2);"><span class="stage-dot" style="background:var(--success);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Active</span></div>`
+                        : status === 'owned'
+                        ? `<div class="pipeline-stage" style="background:rgba(167,139,250,0.08);color:var(--purple);border-color:rgba(167,139,250,0.2);"><span class="stage-dot" style="background:var(--purple);width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><span class="stage-text">Owned</span></div>`
+                        : `<div class="pipeline-stage" style="background:rgba(255,184,0,0.08);color:var(--warning);border-color:rgba(255,184,0,0.2);"><span class="stage-dot" style="background:var(--warning);width:8px;height:8px;border-radius:50%;display:none;flex-shrink:0;"></span><span class="stage-text">Pending</span></div>`
+                    }
+                    <div style="flex:1;min-width:0;">
+                        <div class="pipeline-name">${name}</div>
+                        <div class="pipeline-desc">${projTag} · ${cycleText}</div>
+                    </div>
+                    <div class="pipeline-score" style="font-family:'Inter',sans-serif;font-weight:600;color:${status === 'active' ? '#fff' : status === 'owned' ? 'var(--success)' : 'var(--warning)'};white-space:nowrap;">\$${amt.toFixed(2)}${cycleLabel}</div>
+                    <button onclick="editExpense(this)" title="Edit expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px 2px;font-size:13px;line-height:1;transition:color 0.2s;font-family:'Inter',sans-serif;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--zinc-600)'">✏️</button>
+                    <button onclick="deleteExpense(this)" title="Remove expense" style="background:none;border:none;color:var(--zinc-600);cursor:pointer;padding:4px;font-size:16px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--zinc-600)'">✕</button>
+                `;
+            }
+        });
+    }
+
+    // Mouse glow follow
+    document.addEventListener('mousemove', (e) => {
+        const glow = document.getElementById('mouse-glow');
+        if (glow) {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top  = e.clientY + 'px';
+        }
+    });
+
+    // ── PROJECT DETAIL MODAL ──
+    const projectData = {
+        'vestaos': {
+            name: 'VestaOS — Property Management',
+            status: 'Active',
+            statusClass: 'active',
+            stage: 'Internal Development',
+            timeline: [
+                { text: 'Scoping & research — analyzed top property management platforms', type: 'done' },
+                { text: 'Database setup — Prisma 7 + SQLite, seeded with sample data', type: 'done' },
+                { text: 'Properties list page — real DB data, cards with links to detail', type: 'done' },
+                { text: 'Property detail page — info, tenants, financials, documents, maintenance', type: 'done' },
+                { text: 'Add Property form — name, address, photo upload, server action', type: 'done' },
+                { text: 'Add Tenant form — property dropdown, lease details, server action', type: 'done' },
+                { text: 'Edit & delete flows — property and tenant CRUD completion', type: 'now' },
+                { text: 'Dashboard with real DB data — replace mock data with live queries', type: 'todo' },
+                { text: 'Document upload — lease PDFs, inspection reports, photos', type: 'todo' },
+                { text: 'Cash flow dashboard — income vs expenses, state tax display', type: 'todo' },
+                { text: 'Maintenance request CRUD — create, track cost, update status', type: 'todo' },
+                { text: 'Expense & income tracking per property', type: 'todo' },
+                { text: 'Simple login/auth for internal team', type: 'todo' },
+            ],
+            builtWith: 'Next.js 16 · Tailwind v4 · Prisma 7 · SQLite · TypeScript · Phosphor Icons',
+            liveUrl: 'https://property-manager-roan.vercel.app',
+            notes: 'Internal admin tool for property profiles, tenant management, cash flow, documents, and maintenance tracking. No payments or tenant portals.',
+        },
+        'website-rebuilder': {
+            name: 'Website Rebuilder',
+            status: 'Active',
+            statusClass: 'active',
+            stage: 'Early Development',
+            timeline: [
+                { text: 'Concept & scope defined — AI-powered site reconstruction', type: 'done' },
+                { text: 'Screenshots and motivation sent to Jaime', type: 'done' },
+                { text: 'Build phase — implementing core reconstruction logic', type: 'now' },
+            ],
+            builtWith: 'TBD',
+            liveUrl: null,
+            notes: 'AI-powered site reconstruction & automation tool.',
+        },
+        'lunar-pixel': {
+            name: 'Lunar Pixel — POD Shirt Store',
+            status: 'Active',
+            statusClass: 'active',
+            stage: 'First Product Live',
+            timeline: [
+                { text: 'Domain purchased & DNS set — lunarpixel.co', type: 'done' },
+                { text: 'Shopify store created — Basic plan', type: 'done' },
+                { text: 'Custom domain set as primary — shop.lunarpixel.co', type: 'done' },
+                { text: 'Branding applied — logo, colors, homepage sections', type: 'done' },
+                { text: 'Printify installed & integrated', type: 'done' },
+                { text: 'Capsule Corp. DBZ shirt created & tagged', type: 'done' },
+                { text: 'Best Dad in Universe 7 shirt created & tagged', type: 'done' },
+                { text: 'New Drops smart collection created (auto-tags)', type: 'done' },
+                { text: 'Remove store password & launch', type: 'now' },
+                { text: 'Add SSN to Shopify Payments', type: 'todo' },
+                { text: 'Design 3+ more shirt collections', type: 'todo' },
+            ],
+            builtWith: 'Shopify · Printify · Gildan Softstyle',
+            liveUrl: 'https://shop.lunarpixel.co',
+            notes: 'Print-on-demand merch store. DBZ-fandom apparel. 2 products live. Phase 2 (ads) playbook ready.',
+            phases: [
+                {
+                    name: 'Phase 1: Launch & Foundation',
+                    status: 'in-progress',
+                    tasks: [
+                        'Remove store password',
+                        'Add SSN to Shopify Payments',
+                        'Set up email capture (Shopify built-in)',
+                        'Post 3-5 organic product shots to IG/TikTok',
+                        'Install Meta + Google pixels',
+                        'Build to 5-7 total products',
+                    ]
+                },
+                {
+                    name: 'Phase 2: Testing — $10-20/day',
+                    status: 'ready',
+                    tasks: [
+                        '1 ad set per product (FB/IG)',
+                        '3-4 creatives per set (image carousel, single, video mockup)',
+                        'Audiences: Interest-based (Dragon Ball Z, anime merch, geek apparel)',
+                        'Run 3-5 days per product, find winning CPA < $5-7',
+                        'CTR > 2%, ATC rate > 5%, ROAS > 2.0 targets',
+                    ]
+                },
+                {
+                    name: 'Phase 3: Scale — $50-100/day',
+                    status: 'pending',
+                    tasks: [
+                        'Scale winning ad set 20-30% daily',
+                        'Lookalike audience from purchasers (50+)',
+                        'UGC — micro-influencer reviews',
+                        'Retargeting ads (abandoned cart, 10% off)',
+                        'Google Shopping Ads feed',
+                        'TikTok Ads for visual products',
+                    ]
+                },
+                {
+                    name: 'Phase 4: Optimize & Expand',
+                    status: 'pending',
+                    tasks: [
+                        'A/B test pricing ($24.99 vs $29.99)',
+                        'Abandoned cart email sequence',
+                        'Seasonal drops (holidays, conventions)',
+                        'Bundle deals & free shipping thresholds',
+                        'Scale to $250-500/day',
+                    ]
+                },
+            ],
+        },
+        'magnolia-made': {
+            name: 'Magnolia Made Cookies',
+            status: 'Active',
+            statusClass: 'active',
+            stage: 'In Queue',
+            timeline: [
+                { text: 'Brand storefront concept approved', type: 'done' },
+                { text: 'Development start — waiting for VestaOS completion', type: 'now' },
+            ],
+            builtWith: 'TBD',
+            liveUrl: null,
+            notes: 'Brand storefront for Magnolia Made Cookies.',
+        },
+        'trend-tracker': {
+            name: 'Trend Tracker — POD Intel',
+            status: 'Active',
+            statusClass: 'active',
+            stage: 'Live',
+            timeline: [
+                { text: 'Single-page React app built', type: 'done' },
+                { text: 'Weekly Trend Log form — niche, source, keyword, product type', type: 'done' },
+                { text: 'Trend Board — filterable card grid by demand, niche, product', type: 'done' },
+                { text: 'Action Pipeline — Idea → Designing → Listed → Testing Ads → Winner/Killed', type: 'done' },
+                { text: 'Winners view + weekly summary digest', type: 'done' },
+                { text: 'localStorage persistence + dark mode UI', type: 'done' },
+                { text: 'Deployed to GitHub Pages', type: 'done' },
+                { text: 'Integration with dashboard nav', type: 'now' },
+            ],
+            builtWith: 'React 18 (CDN) · localStorage · Vanilla CSS · GitHub Pages',
+            liveUrl: 'https://red5standinby.github.io/trend-tracker/',
+            notes: 'Browser-based trend tracking tool for Lunar Pixel\'s print-on-demand business. No build step — single HTML file.',
+        },
+    };
+
+    function openProjectModal(id) {
+        const data = projectData[id];
+        if (!data) return;
+
+        const timelineHtml = data.timeline.map(item =>
+            `<div class="modal-timeline-item ${item.type}">${item.text}</div>`
+        ).join('');
+
+        // Phases / Playbook section
+        let phasesHtml = '';
+        if (data.phases) {
+            phasesHtml = data.phases.map(phase => {
+                const statusLabels = { 'in-progress': '🔄 In Progress', 'ready': '✅ Ready', 'pending': '⏳ Pending' };
+                const statusColors = { 'in-progress': 'var(--warning)', 'ready': 'var(--success)', 'pending': 'var(--zinc-500)' };
+                const taskList = phase.tasks.map(t => `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;"><span style="color:var(--zinc-500);margin-top:1px;">•</span><span style="font-size:11px;color:var(--zinc-400);line-height:1.5;">${t}</span></div>`).join('');
+                return `<div style="margin-bottom:20px;padding:16px;border:1px solid var(--glass-border);border-radius:8px;background:var(--glass-bg);">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span style="font-size:13px;font-weight:600;">${phase.name}</span>
+                        <span style="font-size:9px;padding:2px 8px;border-radius:100px;background:${statusColors[phase.status]}15;color:${statusColors[phase.status]};border:1px solid ${statusColors[phase.status]}30;">${statusLabels[phase.status]}</span>
+                    </div>
+                    ${taskList}
+                </div>`;
+            }).join('');
+        }
+
+        const linkHtml = data.liveUrl
+            ? `<p style="margin-top:16px;"><a href="${data.liveUrl}" target="_blank" rel="noopener noreferrer" class="modal-link">🔗 ${data.liveUrl}</a></p>`
+            : '';
+
+        document.getElementById('modal-body').innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <span class="modal-tag ${data.statusClass}">${data.status}</span>
+                <span style="font-size:11px;color:var(--zinc-400);letter-spacing:0.1em;">${data.stage}</span>
+            </div>
+            <h2 style="font-size:20px;font-weight:500;letter-spacing:-0.02em;margin-bottom:4px;">${data.name}</h2>
+            <p style="font-size:12px;color:var(--zinc-400);line-height:1.6;margin-bottom:24px;">${data.notes}</p>
+
+            <div class="modal-section">
+                <div class="modal-section-title">📅 Timeline</div>
+                <div class="modal-timeline">${timelineHtml}</div>
+            </div>
+
+            ${phasesHtml ? `<div class="modal-section"><div class="modal-section-title">🚀 Launch Playbook</div>${phasesHtml}</div>` : ''}
+
+            <div class="modal-section">
+                <div class="modal-section-title">🔧 Stack</div>
+                <p style="font-size:11px;color:var(--zinc-400);margin-top:4px;">${data.builtWith}</p>
+            </div>
+
+            ${linkHtml}
+        `;
+
+        document.getElementById('project-modal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeProjectModal(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('project-modal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeProjectModal();
+    });
+</script>
+
+<!-- Mouse glow layer -->
+<div id="mouse-glow" style="
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(234,255,0,0.04) 0%, transparent 70%);
+    transition: left 0.1s ease, top 0.1s ease;
+"></div>
+
+</body>
+</html>

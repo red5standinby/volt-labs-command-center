@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trend Tracker — Lunar Pixel</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --surface2:#1a1a28;
+  --border:#2a2a40;
+  --text:#e8e8f0;
+  --text-muted:#8888a0;
+  --accent:#8b5cf6;
+  --accent-dim:#6d4fbf;
+  --green:#22c55e;
+  --yellow:#eab308;
+  --gray:#6b7280;
+  --purple:#a855f7;
+  --danger:#ef4444;
+  --success:#22c55e;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.layout{max-width:1200px;margin:0 auto;padding:20px}
+
+/* Nav */
+.nav{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap}
+.nav h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-tabs{display:flex;gap:4px;margin-left:auto}
+.nav-tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);background:transparent;border:none;transition:.15s}
+.nav-tab:hover{color:var(--text);background:var(--surface2)}
+.nav-tab.active{color:#fff;background:var(--accent)}
+
+/* Form */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.form-grid label{font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px}
+.form-grid input,.form-grid select,.form-grid textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:.15s}
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(139,92,246,.15)}
+.form-grid textarea{resize:vertical;min-height:60px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dim)}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:4px;font-size:16px}
+.btn-icon:hover{color:var(--text);background:var(--surface2)}
+.form-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+
+/* Filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.filters select{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:var(--font)}
+.filters select:focus{border-color:var(--accent)}
+.filters .clear-btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:var(--font)}
+.filters .clear-btn:hover{color:var(--text);border-color:var(--text-muted)}
+.search-input{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:var(--font);flex:1;min-width:180px}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(139,92,246,.15)}
+.sort-group{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+
+/* Cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.trend-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;transition:.15s}
+.trend-card:hover{border-color:var(--accent-dim)}
+.trend-card.demand-strong{border-left:3px solid var(--green)}
+.trend-card.demand-moderate{border-left:3px solid var(--yellow)}
+.trend-card.demand-weak{border-left:3px solid var(--gray)}
+.trend-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.trend-card h3{font-size:15px;font-weight:600;margin-bottom:2px}
+.trend-card .meta{font-size:12px;color:var(--text-muted);display:flex;gap:8px;flex-wrap:wrap}
+.trend-card .meta span{background:var(--surface2);padding:2px 8px;border-radius:4px}
+.trend-card .notes{font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.4}
+.demand-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+.demand-badge.strong{background:rgba(34,197,94,.15);color:var(--green)}
+.demand-badge.moderate{background:rgba(234,179,8,.15);color:var(--yellow)}
+.demand-badge.weak{background:rgba(107,114,128,.15);color:var(--gray)}
+
+/* Status Pipeline */
+.pipeline{display:flex;gap:4px;margin-top:12px;flex-wrap:wrap}
+.pipeline-step{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:.15s}
+.pipeline-step.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pipeline-step:hover{background:var(--surface2)}
+.pipeline-step.done{background:rgba(34,197,94,.15);color:var(--green);border-color:var(--green)}
+.pipeline-step.winner{background:rgba(34,197,94,.25);color:var(--green);border-color:var(--green)}
+.pipeline-step.killed{background:rgba(239,68,68,.15);color:var(--danger);border-color:var(--danger)}
+
+/* Summary */
+.summary-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px}
+.summary-box pre{background:var(--surface2);padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-top:12px}
+.summary-box .copy-btn{padding:8px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;margin-top:12px}
+.summary-box .copy-btn:hover{background:var(--accent-dim)}
+
+/* Winners */
+.winners-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.winner-card{background:linear-gradient(135deg,rgba(34,197,94,.08),transparent);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:16px}
+.winner-card h3{font-size:15px;font-weight:600;color:var(--green)}
+.winner-card .meta{font-size:12px;color:var(--text-muted);margin-top:4px}
+
+/* Mobile */
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .nav{flex-direction:column;align-items:flex-start}
+  .nav-tabs{margin-left:0;width:100%;overflow-x:auto}
+  .card-grid{grid-template-columns:1fr}
+  .filters{flex-direction:column}
+  .filters select,.search-input{width:100%}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// Constants
+const NICHE_OPTIONS = ['Tired Parents','Gamers','Pet Owners','Coffee Addicts','Retro Nostalgia','Internet Humor','Other'];
+const SOURCE_OPTIONS = ['Google Trends','Printify Trends','TikTok','Etsy','Amazon','Pinterest','Other'];
+const PRODUCT_TYPES = ['T-Shirt','Hoodie','Mug','Tote','Hat','Sticker'];
+const COMPETITION = ['Low','Medium','High'];
+const DEMAND = ['Weak','Moderate','Strong'];
+const PIPELINE = ['Idea','Designing','Listed','Testing Ads','Winner','Killed'];
+
+const STORAGE_KEY = 'lunar_pixel_trends';
+
+function loadTrends(){
+  try{
+    const d=localStorage.getItem(STORAGE_KEY);
+    return d ? JSON.parse(d) : [];
+  }catch{return []}
+}
+
+function saveTrends(t){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(t));
+}
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+// Field helper — defined outside component to prevent re-creation on each render
+function Field({label,children}){
+  return React.createElement('div',{className:children?.type==='textarea'?'full':''},
+    React.createElement('label',null,label),
+    children
+  );
+}
+
+// Form Component
+function TrendForm({onSubmit,editItem,onCancel}){
+  const [form,setForm]=useState({
+    niche:'Gamers',source:'Google Trends',keyword:'',productType:'T-Shirt',
+    competition:'Medium',demand:'Moderate',notes:'',dateAdded:todayStr()
+  });
+
+  useEffect(()=>{
+    if(editItem) setForm({...editItem});
+  },[editItem]);
+
+  // Stable updater — use refs to avoid stale closures
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const handleSubmit=e=>{
+    e.preventDefault();
+    if(!form.keyword.trim()) return;
+    onSubmit(form);
+    if(!editItem) setForm(f=>({...f,niche:'Gamers',source:'Google Trends',keyword:'',productType:'T-Shirt',competition:'Medium',demand:'Moderate',notes:'',dateAdded:todayStr()}));
+  };
+
+  return React.createElement('form',{onSubmit:handleSubmit,className:'form-card'},
+    React.createElement('div',{className:'form-grid'},
+      React.createElement(Field,{label:'Niche'},
+        React.createElement('select',{value:form.niche,onChange:e=>set('niche',e.target.value)},
+          NICHE_OPTIONS.map(o=>React.createElement('option',{key:o,value:o},o))
+        )
+      ),
+      React.createElement(Field,{label:'Source'},
+        React.createElement('select',{value:form.source,onChange:e=>set('source',e.target.value)},
+          SOURCE_OPTIONS.map(o=>React.createElement('option',{key:o,value:o},o))
+        )
+      ),
+      React.createElement(Field,{label:'Keyword / Theme'},
+        React.createElement('input',{value:form.keyword,onChange:e=>set('keyword',e.target.value),placeholder:'e.g. "Tired Dad Coffee Meme"...'})
+      ),
+      React.createElement(Field,{label:'Product Type'},
+        React.createElement('select',{value:form.productType,onChange:e=>set('productType',e.target.value)},
+          PRODUCT_TYPES.map(o=>React.createElement('option',{key:o,value:o},o))
+        )
+      ),
+      React.createElement(Field,{label:'Competition'},
+        React.createElement('select',{value:form.competition,onChange:e=>set('competition',e.target.value)},
+          COMPETITION.map(o=>React.createElement('option',{key:o,value:o},o))
+        )
+      ),
+      React.createElement(Field,{label:'Demand Signal'},
+        React.createElement('select',{value:form.demand,onChange:e=>set('demand',e.target.value)},
+          DEMAND.map(o=>React.createElement('option',{key:o,value:o},o))
+        )
+      ),
+      React.createElement('div',{className:'full'},
+        React.createElement('label',null,'Notes'),
+        React.createElement('textarea',{value:form.notes,onChange:e=>set('notes',e.target.value),placeholder:'Any additional context...'})
+      ),
+      React.createElement('div',{className:'full'},
+        React.createElement('label',null,'Date Added'),
+        React.createElement('input',{type:'date',value:form.dateAdded,onChange:e=>set('dateAdded',e.target.value)})
+      )
+    ),
+    React.createElement('div',{className:'form-actions'},
+      editItem && React.createElement('button',{type:'button',className:'btn btn-danger btn-sm',onClick:onCancel},'Cancel'),
+      React.createElement('button',{type:'submit',className:'btn btn-primary'},editItem?'Update Entry':'Add Trend')
+    )
+  );
+}
+
+// Trend Card
+function TrendCard({trend,onEdit,onDelete,onAdvance}){
+  const demandClass=trend.demand==='Strong'?'strong':trend.demand==='Moderate'?'moderate':'weak';
+  const pipelineIndex=PIPELINE.indexOf(trend.status||'Idea');
+  const isTerminal=trend.status==='Winner'||trend.status==='Killed';
+
+  return React.createElement('div',{className:`trend-card demand-${demandClass}`},
+    React.createElement('div',{className:'trend-card-header'},
+      React.createElement('div',null,
+        React.createElement('h3',null,trend.keyword),
+        React.createElement('div',{className:'meta'},
+          React.createElement('span',null,trend.niche),
+          React.createElement('span',null,trend.productType),
+          React.createElement('span',null,trend.source),
+          React.createElement('span',null,trend.dateAdded)
+        )
+      ),
+      React.createElement('div',{style:{display:'flex',gap:4}},
+        React.createElement('button',{className:'btn-icon',onClick:()=>onEdit(trend),title:'Edit'},'✏️'),
+        React.createElement('button',{className:'btn-icon',onClick:()=>onDelete(trend.id),title:'Delete'},'🗑️')
+      )
+    ),
+    React.createElement('div',{style:{display:'flex',gap:8,alignItems:'center',marginTop:8}},
+      React.createElement('span',{className:`demand-badge ${demandClass}`},trend.demand),
+      React.createElement('span',{style:{fontSize:12,color:'var(--text-muted)'}},`Comp: ${trend.competition}`)
+    ),
+    trend.notes && React.createElement('div',{className:'notes'},trend.notes),
+    React.createElement('div',{className:'pipeline'},
+      PIPELINE.map((step,i)=>{
+        let cls='pipeline-step';
+        if(i===pipelineIndex) cls+=' active';
+        else if(i<pipelineIndex&&step==='Winner') cls+=' winner';
+        else if(i<pipelineIndex&&step==='Killed') cls+=' killed';
+        else if(i<pipelineIndex) cls+=' done';
+        const handleClick=()=>{
+          if(!isTerminal||step==='Winner'||step==='Killed'){
+            if(i!==pipelineIndex){
+              const gaps=i>pipelineIndex?i-pipelineIndex:-(pipelineIndex-i);
+              onAdvance(trend.id,gaps);
+            }
+          }
+        };
+        return React.createElement('button',{key:step,className:cls,onClick:handleClick},step);
+      })
+    )
+  );
+}
+
+// Weekly Summary
+function WeeklySummary({trends}){
+  const now=new Date();
+  const weekAgo=new Date(now.getFullYear(),now.getMonth(),now.getDate()-7).toISOString().slice(0,10);
+  const weekTrends=trends.filter(t=>t.dateAdded>=weekAgo);
+
+  const summary=weekTrends.length===0
+    ? 'No new trends logged this week.'
+    : `📊 Weekly Trend Summary (${weekAgo} — ${todayStr()})\n${'='.repeat(45)}\n\n`+
+      weekTrends.map(t=>
+        `• [${t.status||'Idea'}] ${t.keyword}\n`+
+        `  Niche: ${t.niche} | Type: ${t.productType} | Source: ${t.source}\n`+
+        `  Demand: ${t.demand} | Competition: ${t.competition}\n`+
+        (t.notes?`  Notes: ${t.notes}\n`:'')
+      ).join('\n')+
+      `\n\n${'='.repeat(45)}\nTotal entries: ${weekTrends.length}`;
+
+  const [copied,setCopied]=useState(false);
+  const handleCopy=()=>{
+    navigator.clipboard.writeText(summary).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000)});
+  };
+
+  return React.createElement('div',{className:'summary-box'},
+    React.createElement('h2',{style:{fontSize:16,marginBottom:8}},'📋 Weekly Summary'),
+    React.createElement('p',{style:{fontSize:13,color:'var(--text-muted)',marginBottom:8}},
+      `Trends added in the last 7 days (${weekTrends.length} entries)`
+    ),
+    React.createElement('pre',null,summary),
+    weekTrends.length>0 && React.createElement('button',{className:'copy-btn',onClick:handleCopy},
+      copied?'Copied! ✓':'Copy to Clipboard'
+    )
+  );
+}
+
+// Winners View
+function WinnersView({trends,onEdit,onDelete,onAdvance}){
+  const winners=trends.filter(t=>t.status==='Winner');
+  if(winners.length===0) return React.createElement('div',{className:'summary-box',style:{textAlign:'center'}},
+    React.createElement('p',{style:{color:'var(--text-muted)'}},'No winners yet. Keep testing! 🚀')
+  );
+
+  return React.createElement('div',{className:'winners-list'},
+    winners.map(t=>React.createElement('div',{key:t.id,className:'winner-card'},
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+        React.createElement('div',null,
+          React.createElement('h3',null,'🏆 ',t.keyword),
+          React.createElement('div',{className:'meta'},`${t.niche} · ${t.productType} · ${t.dateAdded}`)
+        ),
+        React.createElement('div',{style:{display:'flex',gap:4}},
+          React.createElement('button',{className:'btn-icon',onClick:()=>onEdit(t)},'✏️'),
+          React.createElement('button',{className:'btn-icon',onClick:()=>onDelete(t.id)},'🗑️')
+        )
+      ),
+      t.notes && React.createElement('div',{className:'notes',style:{color:'var(--text-muted)'}},t.notes)
+    ))
+  );
+}
+
+// Trend Board
+function TrendBoard({trends,onEdit,onDelete,onAdvance}){
+  const [search,setSearch]=useState('');
+  const [filterNiche,setFilterNiche]=useState('');
+  const [filterProduct,setFilterProduct]=useState('');
+  const [filterDemand,setFilterDemand]=useState('');
+  const [sortBy,setSortBy]=useState('date');
+
+  const filtered=useMemo(()=>{
+    let f=trends.filter(t=>t.status!=='Winner'&&t.status!=='Killed');
+    if(search) f=f.filter(t=>t.keyword.toLowerCase().includes(search.toLowerCase())||t.notes?.toLowerCase().includes(search.toLowerCase()));
+    if(filterNiche) f=f.filter(t=>t.niche===filterNiche);
+    if(filterProduct) f=f.filter(t=>t.productType===filterProduct);
+    if(filterDemand) f=f.filter(t=>t.demand===filterDemand);
+    if(sortBy==='date') f.sort((a,b)=>b.dateAdded.localeCompare(a.dateAdded));
+    if(sortBy==='demand'){const o={Strong:3,Moderate:2,Weak:1};f.sort((a,b)=>o[b.demand]-o[a.demand]);}
+    return f;
+  },[trends,search,filterNiche,filterProduct,filterDemand,sortBy]);
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'filters'},
+      React.createElement('input',{className:'search-input',type:'text',placeholder:'Search keywords...',value:search,onChange:e=>setSearch(e.target.value)}),
+      React.createElement('select',{value:filterNiche,onChange:e=>setFilterNiche(e.target.value)},
+        React.createElement('option',{value:''},'All Niches'),
+        NICHE_OPTIONS.map(o=>React.createElement('option',{key:o,value:o},o))
+      ),
+      React.createElement('select',{value:filterProduct,onChange:e=>setFilterProduct(e.target.value)},
+        React.createElement('option',{value:''},'All Products'),
+        PRODUCT_TYPES.map(o=>React.createElement('option',{key:o,value:o},o))
+      ),
+      React.createElement('select',{value:filterDemand,onChange:e=>setFilterDemand(e.target.value)},
+        React.createElement('option',{value:''},'All Demand'),
+        DEMAND.map(o=>React.createElement('option',{key:o,value:o},o))
+      ),
+      React.createElement('div',{className:'sort-group'},
+        React.createElement('label',null,'Sort:'),
+        React.createElement('select',{value:sortBy,onChange:e=>setSortBy(e.target.value)},
+          React.createElement('option',{value:'date'},'Date'),
+          React.createElement('option',{value:'demand'},'Demand')
+        )
+      ),
+      (search||filterNiche||filterProduct||filterDemand) &&
+        React.createElement('button',{className:'clear-btn',onClick:()=>{setSearch('');setFilterNiche('');setFilterProduct('');setFilterDemand('')}},'Clear')
+    ),
+    React.createElement('div',{className:'card-grid'},
+      filtered.map(t=>React.createElement(TrendCard,{key:t.id,trend:t,onEdit:onEdit,onDelete:onDelete,onAdvance:onAdvance}))
+    ),
+    filtered.length===0 && React.createElement('p',{style:{textAlign:'center',color:'var(--text-muted)',marginTop:32}},'No trends match your filters. Log some trends!')
+  );
+}
+
+// App
+function App(){
+  const [trends,setTrends]=useState(loadTrends);
+  const [tab,setTab]=useState('board');
+  const [editing,setEditing]=useState(null);
+
+  useEffect(()=>{saveTrends(trends);},[trends]);
+
+  const addTrend=useCallback(data=>{
+    if(editing){
+      setTrends(prev=>prev.map(t=>t.id===editing.id?{...data,id:editing.id,status:editing.status}:t));
+      setEditing(null);
+    }else{
+      setTrends(prev=>[{...data,id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),status:'Idea'},...prev]);
+    }
+  },[editing]);
+
+  const deleteTrend=useCallback(id=>{
+    if(confirm('Delete this trend entry?')) setTrends(prev=>prev.filter(t=>t.id!==id));
+  },[]);
+
+  const advanceStatus=useCallback((id,gaps)=>{
+    setTrends(prev=>prev.map(t=>{
+      if(t.id!==id) return t;
+      const idx=PIPELINE.indexOf(t.status||'Idea');
+      const newIdx=Math.max(0,Math.min(PIPELINE.length-1,idx+gaps));
+      return {...t,status:PIPELINE[newIdx]};
+    }));
+  },[]);
+
+  const editTrend=useCallback(t=>{setEditing(t);setTab('new');},[]);
+
+  const trendsForBoard=trends;
+  const trendsForWinners=trends;
+
+  return React.createElement('div',{className:'layout'},
+    React.createElement('div',{className:'nav'},
+      React.createElement('div',null,
+        React.createElement('h1',null,'⚡ Trend Tracker'),
+        React.createElement('span',{style:{fontSize:12,color:'var(--text-muted)'}},'Lunar Pixel · Print-on-Demand Insights')
+      ),
+      React.createElement('div',{className:'nav-tabs'},
+        ['new','board','winners','summary'].map(t=>{
+          const labels={new:'+ New Trend',board:'📊 Trend Board',winners:'🏆 Winners',summary:'📋 Weekly Summary'};
+          return React.createElement('button',{
+            key:t,
+            className:`nav-tab${tab===t?' active':''}`,
+            onClick:()=>setTab(t)
+          },labels[t]);
+        })
+      )
+    ),
+    tab==='new' && React.createElement(TrendForm,{onSubmit:addTrend,editItem:editing,onCancel:()=>setEditing(null)}),
+    tab==='board' && React.createElement(TrendBoard,{trends:trendsForBoard,onEdit:editTrend,onDelete:deleteTrend,onAdvance:advanceStatus}),
+    tab==='winners' && React.createElement(WinnersView,{trends:trendsForWinners,onEdit:editTrend,onDelete:deleteTrend,onAdvance:advanceStatus}),
+    tab==='summary' && React.createElement(WeeklySummary,{trends})
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
